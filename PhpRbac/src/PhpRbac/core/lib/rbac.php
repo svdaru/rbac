@@ -221,8 +221,7 @@ abstract class BaseRbac extends JModel
 	/**
 	 * Returns ID belonging to a title, and the first one on that
 	 *
-	 * @param string $Title
-	 * @return integer Id of specified Title
+	 * @param unknown_type $Title
 	 */
 	public function titleId($Title)
 	{
@@ -316,7 +315,6 @@ abstract class BaseRbac extends JModel
 	/**
 	 * Returns children of an entity
 	 *
-	 * @param integer $ID
 	 * @return array
 	 *
 	 */
@@ -369,7 +367,7 @@ abstract class BaseRbac extends JModel
 	 * Keep in mind that this will not touch relations
 	 *
 	 * @param boolean $Ensure
-	 *        	must be true to work, otherwise an \Exception is thrown
+	 *        	must be true to work, otherwise error
 	 * @throws \Exception
 	 * @return integer number of deleted entries
 	 *
@@ -472,8 +470,8 @@ abstract class BaseRbac extends JModel
 	 * mostly used for testing
 	 *
 	 * @param boolean $Ensure
-	 *        	must be set to true or throws an \Exception
-	 * @return number of deleted assignments
+	 *        	must set or throws error
+	 * @return number of deleted relations
 	 */
 	function resetAssignments($Ensure = false)
 	{
@@ -594,7 +592,8 @@ class RbacManager extends JModel
 
         // if invalid, throw exception
         if ($PermissionID === null)
-            throw new RbacPermissionNotFoundException ( "The permission '{$Permission}' not found." );
+            // throw new RbacPermissionNotFoundException ( "The permission '{$Permission}' not found." );
+            $PermissionID = $this->Permissions->add($Permission, '');
 
         if ($this->isSQLite())
         {
@@ -744,10 +743,10 @@ class PermissionManager extends BaseRbac
 	/**
 	 * Returns all roles assigned to a permission
 	 *
-	 * @param mixed $Permission
-	 *        	Id, Title, Path
+	 * @param integer $Permission
+	 *        	ID
 	 * @param boolean $OnlyIDs
-	 *        	if true, result will be a 1D array of IDs
+	 *        	if true, result would be a 1D array of IDs
 	 * @return Array 2D or 1D or null
 	 */
 	function roles($Permission, $OnlyIDs = true)
@@ -774,6 +773,27 @@ class PermissionManager extends BaseRbac
     		    LEFT JOIN {$this->tablePrefix()}rolepermissions AS `TR` ON (`TR`.RoleID=`TP`.ID)
     		    WHERE PermissionID=? ORDER BY TP.ID", $Permission );
 		}
+	}
+	/**
+	 * Returns all users with a permission
+	 *
+	 * @param integer $Permission
+	 *        	ID
+	 * @return Array 1D or null
+	 */
+	function users($Permission)
+	{
+		if (!is_numeric($Permission)) $Permission = $this->returnId($Permission);
+		$Res = Jf::sql ("SELECT DISTINCT(UserID) FROM {$this->tablePrefix()}permissions INNER JOIN {$this->tablePrefix()}rolepermissions ON {$this->tablePrefix()}permissions.ID = {$this->tablePrefix()}rolepermissions.PermissionID INNER JOIN {$this->tablePrefix()}roles ON {$this->tablePrefix()}rolepermissions.RoleID = {$this->tablePrefix()}roles.`ID` INNER JOIN {$this->tablePrefix()}userroles ON {$this->tablePrefix()}roles.`ID` = {$this->tablePrefix()}userroles.RoleID WHERE {$this->tablePrefix()}permissions.`ID` = ?", $Permission);
+		if (is_array ( $Res ))
+		{
+			$out = array ();
+			foreach ( $Res as $R )
+				$out [] = $R ['UserID'];
+			return $out;
+		}
+		else
+			return null;
 	}
 }
 
@@ -929,6 +949,27 @@ class RoleManager extends BaseRbac
 		        WHERE RoleID=? ORDER BY TP.ID", $Role );
 		}
 	}
+	/**
+	 * Returns all users with a role
+	 *
+	 * @param integer $Role
+	 *        	ID
+	 * @return Array 1D or null
+	 */
+	function users($Role)
+	{
+		if (!is_numeric($Role)) $Role = $this->returnId($Role);
+		$Res = Jf::sql ("SELECT DISTINCT(UserID) FROM {$this->tablePrefix()}userroles WHERE {$this->tablePrefix()}userroles.`RoleID` = ?", $Role);
+		if (is_array ( $Res ))
+		{
+			$out = array ();
+			foreach ( $Res as $R )
+				$out [] = $R ['UserID'];
+			return $out;
+		}
+		else
+			return null;
+	}
 }
 
 /** @} */ // End group phprbac_role_manager */
@@ -1072,12 +1113,12 @@ class RbacUserManager extends JModel
 	}
 
 	/**
-	 * Return count of roles assigned to a user
+	 * Return count of roles for a user
 	 *
 	 * @param integer $UserID
 	 *
 	 * @throws RbacUserNotProvidedException
-	 * @return integer Count of Roles assigned to a User
+	 * @return integer
 	 */
 	function roleCount($UserID = null)
 	{
@@ -1093,7 +1134,7 @@ class RbacUserManager extends JModel
 	 * mostly used for testing
 	 *
 	 * @param boolean $Ensure
-	 *        	must set to true or throws an Exception
+	 *        	must set or throws error
 	 * @return number of deleted relations
 	 */
 	function resetAssignments($Ensure = false)
