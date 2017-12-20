@@ -1,5 +1,5 @@
 {
-	"name" : "svda/phprbac",
+	"name" : "svdaru/phprbac",
 	"type" : "library",
 	"description" : "This is a fork from OWASP/rbac",
 	"keywords" : [
