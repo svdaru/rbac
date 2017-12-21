@@ -956,7 +956,7 @@ class RoleManager extends BaseRbac
 	 *        	ID
 	 * @return Array 1D or null
 	 */
-	function users($Role)
+	function users($Role,$OnlyIDs = true)
 	{
 		if (!is_numeric($Role)) $Role = $this->returnId($Role);
 		$Res = Jf::sql ("SELECT DISTINCT(UserID) FROM {$this->tablePrefix()}userroles WHERE {$this->tablePrefix()}userroles.`RoleID` = ?", $Role);
@@ -964,7 +964,7 @@ class RoleManager extends BaseRbac
 		{
 			$out = array ();
 			foreach ( $Res as $R )
-				$out [] = $R ['UserID'];
+				$out [] = (int) $R ['UserID'];
 			return $out;
 		}
 		else
