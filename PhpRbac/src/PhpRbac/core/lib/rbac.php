@@ -926,7 +926,7 @@ class RoleManager extends BaseRbac
 	 * @return Array 2D or 1D or null
 	 *         the two dimensional array would have ID,Title and Description of permissions
 	 */
-	function permissions($Role, $OnlyIDs = true)
+	function permissions($Role)
 	{
 	    if (! is_numeric ($Role))
 	        $Role = $this->returnId($Role);
